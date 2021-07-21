@@ -11,3 +11,4 @@ explorations
 /packages/vite/LICENSE
 *.cpuprofile
 **/temp
+rollup.config.js
