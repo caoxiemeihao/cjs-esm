@@ -1,7 +1,21 @@
 {
   "name": "cjs-esm",
-  "version": "1.0.0",
-  "main": "index.js",
+  "version": "0.0.1",
+  "main": "dist/index.js",
   "author": "草鞋没号 <308487730@qq.com>",
-  "license": "MIT"
+  "license": "MIT",
+  "scripts": {
+    "build": "npm run rollup-conf && npm run rollup",
+    "rollup": "rollup -c rollup.config.js",
+    "rollup-conf": "tsc --project rollup.tsconfig.json"
+  },
+  "dependencies": {
+    "@rollup/plugin-commonjs": "^19.0.1",
+    "@rollup/plugin-node-resolve": "^13.0.2",
+    "@rollup/plugin-typescript": "^8.2.3",
+    "rollup": "^2.53.2",
+    "tslib": "^2.3.0",
+    "typescript": "^4.3.5"
+  },
+  "devDependencies": {}
 }
