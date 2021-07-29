@@ -7,21 +7,36 @@ import {
 } from './utils'
 
 export interface CreateContextOptions {
-  code: string
   parse?: typeof acorn.parse
+  code: string
   ast?: AcornNodeExt
   sourceMap?: boolean
-  importStyle?: string | ((moduleId: string) => string)
-  exportStyle?: string | (() => string)
+  importStyle?: string | ((moduleId: string) => Promise<string>)
+  exportStyle?: string | (() => Promise<string>)
   nested?: boolean
   warn?: (message: string, pos: number) => void
+  // ---------
+  topLevel
+  scope
+  assignment
+  skip
+  walkContext
+  hasDefaultComment
+}
+
+export interface Context extends CreateContextOptions {
+  importStyleCache: Map<string, boolean>
+  isImportPreferDefault: (moduleId: string) => Promise<boolean>
+  exportStyleCache: boolean
+  isExportPreferDefault: () => Promise<boolean>
+  node?: AcornNodeExt
 }
 
 function createContext(options: CreateContextOptions) {
-  const context = Object.assign({}, options) as KV_ANY
+  const context = Object.assign({}, options) as Context
 
   context.importStyleCache = new Map
-  context.isImportPreferDefault = (id) => {
+  context.isImportPreferDefault = (id: string) => {
     if (context.importStyleCache.has(id)) {
       return Promise.resolve(context.importStyleCache.get(id))
     }
@@ -54,7 +69,7 @@ function createContext(options: CreateContextOptions) {
     }
 
     const result = options.exportStyle === 'default'
-    context.exportStyle = result
+    context.exportStyleCache = result
     return Promise.resolve(result)
   }
 
