@@ -57,7 +57,10 @@ function createScopeAnalyzer(ast: AcornNodeExt, dummy) {
     let node = scope._node
 
     while (node) {
-      if (['FunctionExpression', 'FunctionDeclaration'].includes(node.type)) {
+      if (
+        node.type === 'FunctionExpression' ||
+        node.type === 'FunctionDeclaration'
+      ) {
         return node
       }
       node = node.scope.parent?._node
@@ -113,7 +116,10 @@ function createAssignmentAnalyzer() {
   return { enter }
 
   function enter(node: AcornNodeExt) {
-    if (['AssignmentExpression', 'AssignmentPattern'].includes(node.type)) {
+    if (
+      node.type === 'AssignmentExpression' ||
+      node.type === 'AssignmentPattern'
+    ) {
       node.left.isAssignment = true
     } else if (node.type === 'UpdateExpression') {
       node.argument.isAssignment = true
