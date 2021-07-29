@@ -30,7 +30,7 @@ function createTopLevelAnalyzer() {
   }
 }
 
-function createScopeAnalyzer(ast: AcornNodeExt, dummy) {
+function createScopeAnalyzer(ast: AcornNodeExt, dummy: boolean) {
   let scope = dummy ? {} as KV_ANY : attachScopes(ast, 'scope')
 
   return { enter, leave, has, findFunction, setMeta, getMeta }
@@ -392,7 +392,7 @@ function pathToName(s: string) {
   })
 }
 
-export default {
+export {
   createScopeAnalyzer,
   createTopLevelAnalyzer,
   createAssignmentAnalyzer,
