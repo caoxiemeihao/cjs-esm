@@ -15,13 +15,6 @@ export interface CreateContextOptions {
   exportStyle?: string | (() => Promise<string>)
   nested?: boolean
   warn?: (message: string, pos: number) => void
-  // ---------
-  topLevel
-  scope
-  assignment
-  skip
-  walkContext
-  hasDefaultComment
 }
 
 export interface Context extends CreateContextOptions {
@@ -29,7 +22,22 @@ export interface Context extends CreateContextOptions {
   isImportPreferDefault: (moduleId: string) => Promise<boolean>
   exportStyleCache: boolean
   isExportPreferDefault: () => Promise<boolean>
-  node?: AcornNodeExt
+  node?: KV_ANY
+  parent?: KV_ANY
+  // ---------
+  topLevel
+  scope
+  assignment
+  skip
+  walkContext
+  hasDefaultComment
+  // ---------
+  requireNodes?: any[]
+  moduleNodes?: any[]
+  exportsNodes?: any[]
+  needDefaultObject?: boolean
+  importedProperties?: Map<string, any>
+  shouldImportDefault?: Set<any>
 }
 
 function createContext(options: CreateContextOptions) {
