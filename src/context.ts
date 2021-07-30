@@ -47,7 +47,7 @@ export interface Context extends CreateContextOptions {
   namedExports?: Map<string, any>
   objectExports?: Map<string, any>
   finalExportType?: string
-  safeOverwrite?: (start: number, end: number: string)
+  safeOverwrite?: (start: number, end: number, code: string) => void
 }
 
 function createContext(options: CreateContextOptions) {
