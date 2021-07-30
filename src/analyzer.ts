@@ -284,3 +284,5 @@ function createAnalyzer(context: Context) {
   }
 
 }
+
+export { createAnalyzer }
