@@ -1,4 +1,5 @@
 import acorn from 'acorn'
+import MagicString from 'magic-string'
 import {
   createTopLevelAnalyzer,
   createScopeAnalyzer,
@@ -38,6 +39,15 @@ export interface Context extends CreateContextOptions {
   needDefaultObject?: boolean
   importedProperties?: Map<string, any>
   shouldImportDefault?: Set<any>
+  // ---------
+  finalImportType?: KV_ANY
+  s?: MagicString
+  // ---------
+  defaultExports?: any[]
+  namedExports?: Map<string, any>
+  objectExports?: Map<string, any>
+  finalExportType?: string
+  safeOverwrite?: (start: number, end: number: string)
 }
 
 function createContext(options: CreateContextOptions) {
