@@ -1,38 +1,24 @@
-import { createContext, CreateContextOptions } from './context'
-import { createAnalyzer } from './analyzer'
-import { createWriter } from './writer'
+import path from 'path'
+import { Plugin as VitePlugin } from 'vite'
+import { transform } from './transform'
+import {
+  mergeOptions,
+  isCommonjsFile,
+  CommonJsOptions,
+} from './utils'
 
-function transform(options: CreateContextOptions) {
-  const context = createContext(options)
-  const analyzer = createAnalyzer(context)
+export default function commonjs(options?: CommonJsOptions): VitePlugin {
+  const opts = mergeOptions(options)
+  const extensions = opts.extensions as string[]
 
-  try {
-    analyzer.analyze()
-  } catch (error) {
-    if (error.pos === null && context.node) {
-      error.pos = context.node.start
+  return {
+    name: 'vite-plugin-commonjs',
+    transform(code, id) {
+      const parsed = path.parse(id)
+      if (!extensions.includes(parsed.ext)) { return }
+      if (!isCommonjsFile(code)) { return }
+
+      return transform(code).code
     }
-    throw error
   }
-  if (
-    !context.moduleNodes.length &&
-    !context.requireNodes.length &&
-    !context.exportsNodes.length
-  ) {
-    return Promise.resolve({
-      code: context.code,
-      map: null,
-      isTouched: false,
-    })
-  }
-
-  return createWriter(context).write()
-    .then(() => ({
-      code: context.s.toString(),
-      map: options.sourceMap ? context.s.generateMap({ hires: true }) : null,
-      isTouched: true,
-      context,
-    }))
 }
-
-export { transform }
