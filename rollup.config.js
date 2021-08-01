@@ -8,7 +8,7 @@ import typescript from '@rollup/plugin-typescript'
 const rollupOptions = {
   input: 'src/index.ts',
   output: {
-    dir: 'dist',
+    file: 'dist/index.mjs',
   },
   plugins: [
     commonjs(),
