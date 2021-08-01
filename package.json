@@ -1,26 +1,24 @@
 {
   "name": "cjs-esm",
   "version": "0.0.1",
+  "description": "Another CommonJs transform ESModule lib.",
   "main": "dist/index.js",
+  "repository": "https://github.com/caoxiemeihao/cjs-esm/tree/main",
   "author": "草鞋没号 <308487730@qq.com>",
   "license": "MIT",
   "scripts": {
-    "build": "npm run rollup-conf && npm run rollup",
-    "rollup": "rollup -c rollup.config.js",
-    "rollup-conf": "tsc --project rollup.tsconfig.json"
+    "build": "rollup -c"
   },
-  "dependencies": {
-    "@rollup/plugin-commonjs": "^19.0.1",
-    "@rollup/plugin-node-resolve": "^13.0.2",
-    "@rollup/plugin-typescript": "^8.2.3",
+  "dependencies": {},
+  "devDependencies": {
+    "@rollup/plugin-commonjs": "^20.0.0",
+    "@rollup/plugin-node-resolve": "^13.0.4",
+    "@rollup/plugin-typescript": "^8.2.5",
     "@rollup/pluginutils": "^4.1.1",
     "acorn": "^8.4.1",
-    "estree-walker": "^3.0.0",
-    "is-reference": "^3.0.0",
-    "magic-string": "^0.25.7",
-    "rollup": "^2.53.2",
+    "acorn-walk": "^8.1.1",
+    "rollup": "^2.55.1",
     "tslib": "^2.3.0",
     "typescript": "^4.3.5"
-  },
-  "devDependencies": {}
+  }
 }
