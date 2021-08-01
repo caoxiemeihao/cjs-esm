@@ -1,2 +1,2 @@
 # cjs-esm
-CommonJS an ESModule interoperable. 
+Another CommonJs transform ESModule lib.
