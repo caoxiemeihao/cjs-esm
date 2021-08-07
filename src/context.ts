@@ -1,11 +1,15 @@
-import acorn from 'acorn'
-import { AcornNode, KV } from './types'
+import { parse } from 'acorn'
+import {
+  AcornNode,
+  KV,
+  RequireRecord,
+} from './types'
 
 export interface Context {
   ast: AcornNode
   code: string
   sourcemap?: string
-  requires: KV<any>[]
+  requires: RequireRecord[]
   exports: KV<any>[]
 }
 
@@ -17,8 +21,9 @@ export interface CreateContextOptions {
 export function createContext(options: CreateContextOptions) {
   const { code } = options
   const context: Context = {
-    ast: acorn.parse(code, { ecmaVersion: 'latest' }),
+    ast: parse(code, { ecmaVersion: 'latest' }),
     code,
+    sourcemap: null,
     requires: [],
     exports: [],
   }
