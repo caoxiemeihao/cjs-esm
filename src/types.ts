@@ -54,3 +54,85 @@ export interface ArrayExpressionNode {
   Index: number
   CallExpression: CallExpressionNode
 }
+
+export interface ExportsRecord {
+
+}
+
+// -------------------------------------- Import declare
+
+export type ImportName = string | Record</* (name as alias) */string, string> | Record</* (* as name) */'*', string>
+
+export interface ImportRecord {
+  /**
+   * const acornDefault = require('acorn').default
+   * const alias = require('acorn').parse
+   * const acorn = require('acorn')
+   */
+  importName?: {
+    name: ImportName
+    code: string
+    Statement: RequireStatement
+  }
+  /**
+   * const parse = require('acorn').parse
+   * const { ancestor, simple } = require('acorn-walk')
+   */
+  importNames?: {
+    names: string[]
+    code: string
+    Statement: RequireStatement
+  }
+  /** require('acorn') */
+  importOnly?: {
+    code: string
+    Statement: RequireStatement
+  }
+  /** const { ancestor, simple } = require('acorn-walk').other */
+  importDeconstruct?: {
+    name: string
+    deconstruct: string[]
+    codes: string[]
+    Statement: RequireStatement
+  }
+  /** const { ancestor, simple } = require('acorn-walk').default */
+  importDefaultDeconstruct?: {
+    /** 自定义模块名 */
+    name: string
+    deconstruct: string[]
+    codes: string[]
+    Statement: RequireStatement
+  }
+  /** For ArrayExpression, ObjectExpression statement. */
+  importExpression?: {
+    /** 自定义模块名 */
+    name: Record<'*', string>
+    code: string
+    ArrayExpression: ArrayExpressionNode | null
+    ObjectExpression: ObjectExpressionNode | null
+  }
+  importDefaultExpression?: {
+    /** 自定义模块名 */
+    name: string
+    code: string
+    ArrayExpression: ArrayExpressionNode | null
+    ObjectExpression: ObjectExpressionNode | null
+  }
+
+  /** 对象、数组会公用同一个 ancestors 导致判断不准 */
+}
+
+export interface CjsEsmRecord {
+  node: AcornNode
+  require: string
+  cjs: {
+    code: string
+  }
+  importName?: ImportRecord['importName']
+  importNames?: ImportRecord['importNames']
+  importOnly?: ImportRecord['importOnly']
+  importDeconstruct?: ImportRecord['importDeconstruct']
+  importDefaultDeconstruct?: ImportRecord['importDefaultDeconstruct']
+  importExpression?: ImportRecord['importExpression']
+  importDefaultExpression?: ImportRecord['importDefaultExpression']
+}
