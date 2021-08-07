@@ -128,11 +128,11 @@ export function transformImport(requires: RequireRecord[], options: TransformImp
         ?? arrOrObj
     }
     const { CallExpression: CE } = arrOrObj
-    const expType = typeof (arrOrObj as any).Index === 'number' ? 'array' : 'object'
+    const expType = typeof (arrOrObj as any).Index === 'number' ? 'ArrayExpression' : 'ObjectExpression'
     const impt: ImportRecord = {}
 
     if (CE.property === 'default') {
-      const moduleName = `_MODULE_default___EXPRESSION_${expType}__${importCounter++}`
+      const moduleName = `_MODULE_default__${expType}__${importCounter++}`
       impt.importDefaultExpression = {
         name: moduleName,
         code: `import ${moduleName} from "${CE.require}"`,
@@ -141,7 +141,7 @@ export function transformImport(requires: RequireRecord[], options: TransformImp
       }
     } else {
       // CallExpression.property === other 的情况当做 * as moduleName 处理，省的命名冲突
-      const moduleName = `_MODULE_name__EXPRESSION_${expType}__${importCounter++}`
+      const moduleName = `_MODULE_name__${expType}__${importCounter++}`
       impt.importExpression = {
         name: { '*': moduleName },
         code: `import * as ${moduleName} from "${CE.require}"`,
