@@ -8,6 +8,9 @@
     "importHelpers": true,
     "skipLibCheck": true,
     "moduleResolution": "Node",
-    "baseUrl": "."
-  }
+    "baseUrl": ".",
+    "outDir": "dist",
+    "declaration": true
+  },
+  "include": ["src/**/*.ts"]
 }
