@@ -9,6 +9,7 @@ const rollupOptions = {
   input: 'src/index.ts',
   output: {
     file: 'dist/index.mjs',
+    format: 'cjs',
   },
   plugins: [
     commonjs(),
