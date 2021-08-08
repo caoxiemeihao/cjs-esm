@@ -92,7 +92,10 @@ export interface ImportRecord {
   importDeconstruct?: {
     name: string
     deconstruct: string[]
-    codes: string[]
+    codes: [
+      string, // import named statement
+      string, // import deconstructs from named
+    ]
     Statement: RequireStatement
   }
   /** const { ancestor, simple } = require('acorn-walk').default */
@@ -100,7 +103,10 @@ export interface ImportRecord {
     /** 自定义模块名 */
     name: string
     deconstruct: string[]
-    codes: string[]
+    codes: [
+      string, // import default statement
+      string, // import deconstructs from default
+    ]
     Statement: RequireStatement
   }
   /** For ArrayExpression, ObjectExpression statement. */
