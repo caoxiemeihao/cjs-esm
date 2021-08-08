@@ -15,7 +15,7 @@ export function createAnalyze(context: Context) {
     ancestor<AcornNode>(context.ast, {
       CallExpression(node, ancestors) { // arguments[1] === arguments[2]
         if ((node as AcornNode).callee.name === 'require') {
-          analyzeNode(node, ancestors as AcornNode[])
+          analyzeNode(node, ancestors/* 需要浅 copy */.slice(0) as AcornNode[])
         }
       },
     })
