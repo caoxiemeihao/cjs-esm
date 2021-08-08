@@ -162,8 +162,14 @@ export function transformImport(requires: RequireRecord[], options: TransformImp
 
 // ------------------------------------------------
 
-export function createTransform(context: Context) {
-  context.imports = transformImport(context.requires)
+export function createTransform(
+  context: Context,
+  options: {
+    transformImport?: TransformImportOptions
+    transformExport?: TransformExporttOptions
+  } = {},
+) {
+  context.imports = transformImport(context.requires, options.transformImport)
 
   return { transform }
 
@@ -206,7 +212,7 @@ export function createTransform(context: Context) {
       } else if (importOnly) {
         middle = ''
         node = importOnly.Statement.CallExpression.node,
-        importStatements.unshift(importOnly.code)
+          importStatements.unshift(importOnly.code)
       } else if (importDeconstruct) {
         middle = ''
         node = findDeclare(importDeconstruct.Statement)
