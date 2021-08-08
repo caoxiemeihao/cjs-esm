@@ -1,6 +1,7 @@
 import { parse } from 'acorn'
 import {
   AcornNode,
+  ImportRecord,
   KV,
   RequireRecord,
 } from './types'
@@ -10,7 +11,12 @@ export interface Context {
   code: string
   sourcemap?: string
   requires: RequireRecord[]
-  exports: KV<any>[]
+  imports: ImportRecord[]
+  cjsExports: KV<any>[]
+  cjsModuleExport: KV
+  esmExports: KV<any>[]
+  esmExportDefault: KV
+  transformedCode: string
 }
 
 export interface CreateContextOptions {
@@ -25,7 +31,12 @@ export function createContext(options: CreateContextOptions) {
     code,
     sourcemap: null,
     requires: [],
-    exports: [],
+    imports: [],
+    cjsExports: [],
+    cjsModuleExport: {},
+    esmExports: [],
+    esmExportDefault: {},
+    transformedCode: null,
   }
 
   return context
