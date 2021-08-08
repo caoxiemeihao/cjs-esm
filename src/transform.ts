@@ -59,7 +59,7 @@ export function transformImport(requires: RequireRecord[], options: TransformImp
             // const parse = require('acorn').parse
             impt.importNames = {
               names: [CE.property],
-              code: `import { ${CE.property} } from "${CE.require}}"`,
+              code: `import { ${CE.property} } from "${CE.require}"`,
               Statement,
             }
           } else {
