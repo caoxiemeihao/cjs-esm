@@ -1,4 +1,6 @@
+import { Context } from './context';
 import {
+  AcornNode,
   ArrayExpressionNode,
   ExportsRecord,
   ImportRecord,
@@ -128,11 +130,10 @@ export function transformImport(requires: RequireRecord[], options: TransformImp
         ?? arrOrObj
     }
     const { CallExpression: CE } = arrOrObj
-    const expType = typeof (arrOrObj as any).Index === 'number' ? 'ArrayExpression' : 'ObjectExpression'
     const impt: ImportRecord = {}
 
     if (CE.property === 'default') {
-      const moduleName = `_MODULE_default__${expType}__${importCounter++}`
+      const moduleName = `_MODULE_default__${importCounter++}`
       impt.importDefaultExpression = {
         name: moduleName,
         code: `import ${moduleName} from "${CE.require}"`,
@@ -141,7 +142,7 @@ export function transformImport(requires: RequireRecord[], options: TransformImp
       }
     } else {
       // CallExpression.property === other 的情况当做 * as moduleName 处理，省的命名冲突
-      const moduleName = `_MODULE_name__${expType}__${importCounter++}`
+      const moduleName = `_MODULE_name__${importCounter++}`
       impt.importExpression = {
         name: { '*': moduleName },
         code: `import * as ${moduleName} from "${CE.require}"`,
@@ -161,8 +162,103 @@ export function transformImport(requires: RequireRecord[], options: TransformImp
 
 // ------------------------------------------------
 
+export function createTransform(context: Context) {
+  context.imports = transformImport(context.requires)
+
+  return { transform }
+
+  function transform() {
+    let code = context.code
+    const importStatements: string[] = []
+    const importExpressionStatements: string[] = []
+    const importDeconstructs: string[] = []
+
+    const findDeclare = (statement: RequireStatement) => {
+      const { CallExpression: CE } = statement
+      for (let len = CE.ancestors.length, i = len - 1; i >= 0; i--) {
+        if (CE.ancestors[i].type === 'VariableDeclaration') {
+          return CE.ancestors[i]
+        }
+      }
+    }
+
+    for (let len = context.imports.length, i = len - 1; i >= 0; i--) {
+      const {
+        importName,
+        importNames,
+        importOnly,
+        importDeconstruct,
+        importDefaultDeconstruct,
+        importExpression,
+        importDefaultExpression,
+      } = context.imports[i]
+      let middle: string
+      let node: AcornNode
+
+      if (importName) {
+        middle = ''
+        node = findDeclare(importName.Statement)
+        importStatements.unshift(importName.code)
+      } else if (importNames) {
+        middle = ''
+        node = findDeclare(importNames.Statement)
+        importStatements.unshift(importNames.code)
+      } else if (importOnly) {
+        middle = ''
+        node = importOnly.Statement.CallExpression.node,
+        importStatements.unshift(importOnly.code)
+      } else if (importDeconstruct) {
+        middle = ''
+        node = findDeclare(importDeconstruct.Statement)
+        importStatements.unshift(importDeconstruct.codes[0])
+        importDeconstructs.unshift(importDeconstruct.codes[1])
+      } else if (importDefaultDeconstruct) {
+        middle = ''
+        node = findDeclare(importDefaultDeconstruct.Statement)
+        importStatements.unshift(importDefaultDeconstruct.codes[0])
+        importDeconstructs.unshift(importDefaultDeconstruct.codes[1])
+      } else if (importExpression) {
+        middle = importExpression.name['*']
+        node = importExpression.ArrayExpression?.CallExpression.node
+          ?? importExpression.ObjectExpression.CallExpression.node
+        importExpressionStatements.unshift(importExpression.code)
+      } else if (importDefaultExpression) {
+        middle = importDefaultExpression.name
+        node = importDefaultExpression.ArrayExpression?.CallExpression.node
+          ?? importDefaultExpression.ObjectExpression.CallExpression.node
+        importExpressionStatements.unshift(importDefaultExpression.code)
+      }
+
+      if (typeof middle === 'string') {
+        let end = node.end
+        if (middle === '' && code[node.end + 1] === '\n') { end += 1 } // 去掉尾部换行
+        code = code.slice(0, node.start) + middle + code.slice(end)
+      }
+    }
+
+    code = `
+/** Named statements */
+${importStatements.join('\n')}
+
+/** Custom name statements */
+${importExpressionStatements.join('\n')}
+
+/** Deconstructs statements */
+${importDeconstructs.join('\n')}
+${code}
+`
+
+    context.transformedCode = code
+  }
+}
+
+// ------------------------------------------------
+
 export interface TransformExporttOptions { }
 
+/**
+ * @todo 21-08-07
+ */
 export function transformExport(exports: ExportsRecord[], options: TransformExporttOptions = {}) {
 
 }
