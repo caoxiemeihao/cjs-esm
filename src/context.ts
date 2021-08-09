@@ -27,7 +27,7 @@ export interface CreateContextOptions {
 export function createContext(options: CreateContextOptions) {
   const { code } = options
   const context: Context = {
-    ast: parse(code, { ecmaVersion: 'latest' }),
+    ast: parse(code, { ecmaVersion: 'latest', sourceType: 'module' }),
     code,
     sourcemap: null,
     requires: [],
