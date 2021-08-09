@@ -24,9 +24,8 @@ export interface Transformed {
 export function transform(code: string, options: TransformeOptions = {}): Transformed {
   try {
     const context = createContext({ code })
-    const analyze = createAnalyze(context)
 
-    analyze.analyze()
+    createAnalyze(context).analyze()
     createTransform(context, {
       transformImport: options.transformImport,
       transformExport: options.transformExport,
@@ -41,3 +40,5 @@ export function transform(code: string, options: TransformeOptions = {}): Transf
     throw error
   }
 }
+
+export default { transform } // Compatible tsc transpileModule 
