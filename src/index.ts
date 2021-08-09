@@ -22,22 +22,22 @@ export interface Transformed {
 }
 
 export function transform(code: string, options: TransformeOptions = {}): Transformed {
-  const context = createContext({ code })
-  const analyze = createAnalyze(context)
-
   try {
+    const context = createContext({ code })
+    const analyze = createAnalyze(context)
+
     analyze.analyze()
     createTransform(context, {
       transformImport: options.transformImport,
       transformExport: options.transformExport,
     }).transform()
+
+    return {
+      code: context.transformedCode,
+      sourcemap: context.sourcemap,
+      context,
+    }
   } catch (error) {
     throw error
-  }
-
-  return {
-    code: context.transformedCode,
-    sourcemap: context.sourcemap,
-    context,
   }
 }
