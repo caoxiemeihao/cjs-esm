@@ -1,6 +1,6 @@
 {
   "name": "cjs-esm",
-  "version": "0.1.2",
+  "version": "0.1.3",
   "description": "Another CommonJs transform ESModule lib.",
   "main": "dist/index.js",
   "repository": "https://github.com/caoxiemeihao/cjs-esm",
@@ -11,8 +11,8 @@
     "build": "rm -rf dist && tsc"
   },
   "dependencies": {
-    "acorn": "^8.x",
-    "acorn-walk": "^8.x"
+    "acorn": "^8.4.1",
+    "acorn-walk": "^8.1.1"
   },
   "devDependencies": {
     "tslib": "^2.x",
