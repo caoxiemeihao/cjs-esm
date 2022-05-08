@@ -1,44 +1,80 @@
-import { Context, createContext } from './context'
-import { createAnalyze } from './analyze'
-import {
-  createTransform,
-  TransformExporttOptions,
-  TransformImportOptions,
-} from './transform'
+import MagicString, { SourceMap } from 'magic-string'
+import { isCommonjs } from './utils'
+import { analyzer, TopLevelType } from './analyze'
+import { generateImport } from './generate-import'
+import { generateExport } from './generate-export'
 
-export interface TransformeOptions {
-  /**
-   * @default false
-   */
-  sourcemap?: boolean
-  transformImport?: TransformImportOptions
-  transformExport?: TransformExporttOptions
+export interface Result {
+  code: string
+  map?: SourceMap
 }
 
-export interface Transformed {
-  code: string | null
-  sourcemap: string | null
-  context: Context
-}
+export default function cjs2esm(code: string): Result {
+  if (!isCommonjs(code)) {
+    return { code }
+  }
 
-/**
- * ! ! ! Necessary acorn@8.x ! ! !
- * @param code 
- * @param options 
- * @returns 
- */
-export function transform(code: string, options: TransformeOptions = {}): Transformed {
-  const context = createContext({ code })
+  const analyzed = analyzer(code)
+  const imports = generateImport(analyzed)
+  const exportRuntime = generateExport(analyzed)
 
-  createAnalyze(context).analyze()
-  createTransform(context, {
-    transformImport: options.transformImport,
-    transformExport: options.transformExport,
-  }).transform()
+  const promotionImports = []
+  const ms = new MagicString(code)
+
+  // Replace require statement
+  for (const impt of imports) {
+    const {
+      node,
+      topLevelNode,
+      importee: imptee,
+      declaration,
+      importName,
+    } = impt
+    const importee = imptee + ';'
+
+    let importStatement: string
+    if (topLevelNode) {
+      if (topLevelNode.type === TopLevelType.ExpressionStatement) {
+        importStatement = importee
+      } else if (topLevelNode.type === TopLevelType.VariableDeclaration) {
+        importStatement = declaration ? `${importee} ${declaration};` : importee
+      }
+    } else {
+      // TODO: Merge duplicated require id
+      // 🚧-①
+      promotionImports.push(importee)
+      importStatement = importName
+    }
+
+    if (importStatement) {
+      const start = topLevelNode ? topLevelNode.start : node.start
+      const end = topLevelNode ? topLevelNode.end : node.end
+      ms.overwrite(start, end, importStatement)
+    }
+  }
+
+  if (promotionImports.length) {
+    ms.prepend(['/* import-promotion-S */', ...promotionImports, '/* import-promotion-E */'].join(' '))
+  }
+
+  // Replace exports statement
+  if (exportRuntime) {
+    if (exportRuntime.exportDefault) {
+      const { start } = exportRuntime.exportDefault.node
+      ms.appendRight(start, `const ${exportRuntime.exportDefault.name} = `)
+    }
+
+    const polyfill = ['/* export-runtime-S */', exportRuntime.polyfill, '/* export-runtime-E */'].join(' ')
+    const _exports = [
+      '// --------- export-statement ---------',
+      exportRuntime.exportDefault?.statement,
+      exportRuntime.exportMembers,
+    ].filter(Boolean).join('\n')
+    ms.prepend(polyfill).append(_exports)
+  }
 
   return {
-    code: context.transformedCode,
-    sourcemap: context.sourcemap,
-    context,
+    code: ms.toString(),
+    map: ms.generateMap({ hires: true }),
   }
 }
