@@ -1,124 +1,130 @@
-import { ancestor } from 'acorn-walk'
-import { Context } from './context'
-import {
-  AcornNode,
-  RequireRecord,
-  VariableDeclaratorNode,
-} from './types'
+import { parse } from 'acorn'
+import { AcornNode } from './types'
 
-export interface Analyze { }
+// Top-level scope statement types
+export enum TopLevelType {
+  // require('foo')
+  ExpressionStatement = 'ExpressionStatement',
+  // const foo = rquire('foo')
+  VariableDeclaration = 'VariableDeclaration',
+  // TODO: others top-level ...
+}
 
-export function createAnalyze(context: Context) {
-  return { analyze }
+export interface RequireStatement {
+  node: AcornNode
+  ancestors: AcornNode[]
+  // If require statement located top-level scope, this will have a value
+  topLevelNode?: AcornNode & { type: TopLevelType }
+  functionScope?: AcornNode
+}
 
-  function analyze() {
-    ancestor<AcornNode>(context.ast, {
-      CallExpression(node, ancestors) { // arguments[1] === arguments[2]
-        if ((node as AcornNode).callee.name === 'require') {
-          analyzeNode(node, ancestors/* 需要浅 copy */.slice(0) as AcornNode[])
-        }
-      },
-    })
+export interface ExportsStatement {
+  node: AcornNode
+  // module(left).exports(right) = 'foo'
+  // exports(left).bar(right) = 'bar'
+  token: {
+    left: string
+    right: string
+  }
+}
 
+export interface Analyzed {
+  code: string,
+  ast: AcornNode,
+  require: RequireStatement[]
+  exports: ExportsStatement[]
+}
+
+export function analyzer(code: string): Analyzed {
+
+  const ast = parse(code, { ecmaVersion: 'latest' })
+  const analyzed: Analyzed = {
+    code,
+    ast,
+    require: [],
+    exports: [],
   }
 
-  function analyzeNode(_node: AcornNode, ancestors: AcornNode[]) {
-    let parentIndex: number
-    for (let len = ancestors.length, i = len - 1; i >= 0; i--) {
-      // Reverse lookup of the first parent element
-      if (!['CallExpression', 'MemberExpression'].includes(ancestors[i].type)) {
-        parentIndex = i
-        break
-      }
-    }
-    const parentNode = ancestors[parentIndex]
-    const requireNode = ancestors[parentIndex + 1]
-    const requireRecord: RequireRecord = {
-      Statement: {
-        VariableDeclarator: null,
-        CallExpression: null,
-      },
-      ObjectExpression: null,
-      ArrayExpression: null,
-    }
-    const CallExpression = analyzeRequireCallExpression(requireNode, ancestors)
+  simpleWalk(ast, {
+    CallExpression(node, ancestors) {
+      if (node.callee.name !== 'require') return
 
-    switch (parentNode.type) {
-      // An VariableDeclaration statement
-      case 'VariableDeclarator':
-        requireRecord.Statement = {
-          VariableDeclarator: analyzeVariableDeclarator(parentNode),
-          CallExpression,
-        }
-        break
-      // An ObjectExpression Property 
-      case 'Property':
-        requireRecord.ObjectExpression = {
-          Property: parentNode.key.name,
-          CallExpression,
-        }
-        break
-      // An ArrayExpression element
-      case 'ArrayExpression':
-        requireRecord.ArrayExpression = {
-          Index: (parentNode.elements as AcornNode[]).findIndex(elem => elem.start === requireNode.start),
-          CallExpression,
-        }
-        break
-      // Just require statement
-      default:
-        requireRecord.Statement = {
-          VariableDeclarator: null,
-          CallExpression,
-        }
-        break
-    }
-    context.requires.push(requireRecord)
-  }
-
-  function analyzeVariableDeclarator(node: AcornNode): VariableDeclaratorNode {
-    const _node = node.id as AcornNode
-    if (_node.type === 'Identifier') {
-      /* const acorn */
-      return {
-        type: _node.type,
-        node: _node,
-        name: (_node as any).name,
-      }
-    }
-    if (_node.type === 'ObjectPattern') {
-      /* const { ancestor, simple } */
-      return {
-        type: _node.type,
-        node: _node,
-        names: (_node as any).properties.map(property => property.key.name),
-      }
-    }
-  }
-
-  /**
-   * @todo 只考虑常量 require 参数，不考虑拼接、模板字符串 21-08-07
-   */
-  function analyzeRequireCallExpression(requireNode: AcornNode, ancestors: AcornNode[]) {
-    if (requireNode.type === 'CallExpression') {
-      return {
-        type: requireNode.type,
-        node: requireNode,
+      analyzed.require.push({
+        node,
         ancestors,
-        // Require statement has only one argument
-        require: requireNode.arguments[0].value,
-      }
+        topLevelNode: findTopLevelScope(ancestors) as RequireStatement['topLevelNode'],
+        functionScope: findFunctionScope(ancestors),
+      })
+    },
+    AssignmentExpression(node, ancestors) {
+      if (node.left.type !== 'MemberExpression') return
+      if (!(node.left.object.type === 'Identifier' && ['module', 'exports'].includes(node.left.object.name))) return
+
+      analyzed.exports.push({
+        node,
+        token: {
+          left: node.left.object.name,
+          right: node.left.property.name,
+        },
+      })
+    },
+  })
+
+  return analyzed
+}
+
+// ----------------------------------------------------------------------
+
+function simpleWalk(
+  ast: AcornNode,
+  visitors: {
+    [type: string]: (node: AcornNode, ancestors: AcornNode[]) => void | Promise<void>,
+  },
+  ancestors: AcornNode[] = [],
+) {
+  if (!ast) return
+  if (Array.isArray(ast)) {
+    for (const element of ast as AcornNode[]) {
+      simpleWalk(element, visitors, ancestors)
     }
-    if (requireNode.type === 'MemberExpression') {
-      return {
-        type: requireNode.type,
-        node: requireNode,
-        ancestors,
-        property: requireNode.property.name,
-        // Require statement has only one argument
-        require: requireNode.object.arguments[0].value,
-      }
+  } else {
+    ancestors = ancestors.concat(ast)
+    for (const key of Object.keys(ast)) {
+      (typeof ast[key] === 'object' &&
+        simpleWalk(ast[key], visitors, ancestors))
     }
   }
+  visitors[ast.type]?.(ast, ancestors)
+}
 
+simpleWalk.async = function simpleWalkAsync() { }
+
+// The function node that wraps it will be returned
+function findFunctionScope(ancestors: AcornNode[]) {
+  return ancestors.find(an => [
+    'FunctionDeclaration',
+    'ArrowFunctionExpression',
+  ].includes(an.type))
+}
+
+// Will be return nearset ancestor node
+function findTopLevelScope(ancestors: AcornNode[]): AcornNode {
+  const ances = ancestors.map(an => an.type).join()
+  const arr = [...ancestors].reverse()
+
+  // TODO
+  // CallExpression,CallExpression                  | require('foo')()
+  // CallExpression,MemberExpression,CallExpression | require('foo').bar()
+
+  if (/Program,ExpressionStatement,(CallExpression,|MemberExpression,){0,}CallExpression$/.test(ances)) {
+    // require('foo')
+    // require('foo').bar
+    return arr.find(e => e.type === TopLevelType.ExpressionStatement)
+  }
+  if (/Program,VariableDeclaration,VariableDeclarator,(CallExpression,|MemberExpression,){0,}CallExpression$/.test(ances)) {
+    // const foo = require('foo')
+    // const bar = require('foo').bar
+    // const { foo, bar: baz } = require('foo')
+    return arr.find(e => e.type === TopLevelType.VariableDeclaration)
+  }
 }
