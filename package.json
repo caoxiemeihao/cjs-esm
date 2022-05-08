@@ -1,9 +1,12 @@
 {
   "name": "cjs-esm",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "Another CommonJs transform ESModule lib.",
   "main": "dist/index.js",
-  "repository": "https://github.com/caoxiemeihao/cjs-esm",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/caoxiemeihao/cjs-esm.git"
+  },
   "author": "草鞋没号 <308487730@qq.com>",
   "license": "MIT",
   "scripts": {
