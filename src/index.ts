@@ -1,6 +1,6 @@
 import MagicString, { SourceMap } from 'magic-string'
 import { isCommonjs } from './utils'
-import { analyzer, TopLevelType } from './analyze'
+import { analyzer, TopScopeType } from './analyze'
 import { generateImport } from './generate-import'
 import { generateExport } from './generate-export'
 
@@ -25,30 +25,33 @@ export default function cjs2esm(code: string): Result {
   for (const impt of imports) {
     const {
       node,
-      topLevelNode,
       importee: imptee,
       declaration,
       importName,
+      topScopeNode,
+      functionScopeNode,
     } = impt
     const importee = imptee + ';'
 
     let importStatement: string
-    if (topLevelNode) {
-      if (topLevelNode.type === TopLevelType.ExpressionStatement) {
+    if (topScopeNode) {
+      if (topScopeNode.type === TopScopeType.ExpressionStatement) {
         importStatement = importee
-      } else if (topLevelNode.type === TopLevelType.VariableDeclaration) {
+      } else if (topScopeNode.type === TopScopeType.VariableDeclaration) {
         importStatement = declaration ? `${importee} ${declaration};` : importee
       }
+    } else if (functionScopeNode) {
+      // 🚧-①: 🐞
+      ms.overwrite(node.callee.start, node.callee.end, 'import/*🚧-🐞*/')
     } else {
       // TODO: Merge duplicated require id
-      // 🚧-①
       promotionImports.push(importee)
       importStatement = importName
     }
 
     if (importStatement) {
-      const start = topLevelNode ? topLevelNode.start : node.start
-      const end = topLevelNode ? topLevelNode.end : node.end
+      const start = topScopeNode ? topScopeNode.start : node.start
+      const end = topScopeNode ? topScopeNode.end : node.end
       ms.overwrite(start, end, importStatement)
     }
   }
