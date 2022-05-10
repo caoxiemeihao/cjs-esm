@@ -6,13 +6,17 @@ import {
 import { AcornNode } from './types'
 
 /**
- * 目前将 require 分为量给
- * 1. 在顶层作用域，可转换的语句；即可直接转换成 import 的语句
- * 2. 在各种语句、作用域中 require 语句会被提升到底层作用域
+ * At present, the `require` is divided into two cases
+ * 目前，将 require 分为两种情况
  * 
- * TODO:
- * 1. 在各种语句、作用域中 require 精细化处理
- * 2. function 作用域中的 require 语句考虑用 sync-ajax 配合 server 端返回 iife 格式
+ * 🎯-①: At top level scope and can be converted into an `import`
+ * 在顶级作用域，并且可以转换成 import
+ * 
+ * 🚧-①: At non top level scope, the `require` will be promoted
+ * 不在顶级作用域，require 将会被提升
+ * 
+ * 🚧-①: At non top level scope and in the function scope, tt will be converted into `import()`
+ * 不在顶级作用域在函数作用域中，require 将会转换成 import()
  */
 
 export interface ImportRecord {
@@ -65,13 +69,11 @@ export function generateImport(analyzed: Analyzed) {
     const requireIdNode = node.arguments[0]
     // There may be no requireId `require()`
     if (!requireIdNode) continue
-    if (requireIdNode.type === 'Identifier') {
-      requireId = requireIdNode.name
-    } else if (requireIdNode.type === 'Literal') {
+    if (requireIdNode.type === 'Literal') {
       requireId = requireIdNode.value
     }
 
-    if (!requireId) {
+    if (!requireId && !functionScope) {
       throw new Error(`Not supported statement: ${analyzed.code.slice(node.start, node.end)}`)
     }
 
