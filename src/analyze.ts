@@ -4,7 +4,7 @@ import { simpleWalk } from './utils'
 
 // 🎯-①: Top-level scope statement types, it also means statements that can be converted
 // 顶级作用于语句类型，这种可以被无缝换成 import
-export enum TopLevelType {
+export enum TopScopeType {
   // require('foo')
   // require('foo').bar
   ExpressionStatement = 'ExpressionStatement',
@@ -18,8 +18,8 @@ export interface RequireStatement {
   ancestors: AcornNode[]
   // 🎯-①: If require statement located top-level scope and it is convertible, this will have a value
   // 如果 require 在顶级作用于，并且是可转换 import 的，那么 topLevelNode 将会被赋值
-  topLevelNode?: AcornNode & { type: TopLevelType }
-  functionScope?: AcornNode
+  topScopeNode?: AcornNode & { type: TopScopeType }
+  functionScopeNode?: AcornNode
 }
 
 export interface ExportsStatement {
@@ -56,8 +56,8 @@ export function analyzer(code: string): Analyzed {
       analyzed.require.push({
         node,
         ancestors,
-        topLevelNode: findTopLevelScope(ancestors) as RequireStatement['topLevelNode'],
-        functionScope: findFunctionScope(ancestors),
+        topScopeNode: findTopLevelScope(ancestors) as RequireStatement['topScopeNode'],
+        functionScopeNode: findFunctionScope(ancestors),
       })
     },
     AssignmentExpression(node, ancestors) {
@@ -93,13 +93,13 @@ function findTopLevelScope(ancestors: AcornNode[]): AcornNode {
   if (/Program,ExpressionStatement,(MemberExpression,)?CallExpression$/.test(ances)) {
     // Program,ExpressionStatement,CallExpression                  | require('foo')
     // Program,ExpressionStatement,MemberExpression,CallExpression | require('foo').bar
-    return arr.find(e => e.type === TopLevelType.ExpressionStatement)
+    return arr.find(e => e.type === TopScopeType.ExpressionStatement)
   }
 
   if (/Program,VariableDeclaration,VariableDeclarator,(MemberExpression,)?CallExpression$/.test(ances)) {
     // const foo = require('foo')
     // const bar = require('foo').bar
     // const { foo, bar: baz } = require('foo')
-    return arr.find(e => e.type === TopLevelType.VariableDeclaration)
+    return arr.find(e => e.type === TopScopeType.VariableDeclaration)
   }
 }
