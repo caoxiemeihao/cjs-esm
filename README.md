@@ -19,7 +19,17 @@ const { code, map } = cjs2esm(`const fs = require('fs')`)
 
 ## TODO
 
-❌ Nested scope(function-scope)
+✅ Nested scope(function-scope) 🚧-🐞
+
+```js
+function load(path) {
+  require(path);
+}
+↓
+function load(path) {
+  import/*🚧-🐞*/(path);
+}
+```
 
 ❌ Dynamic require id
 
