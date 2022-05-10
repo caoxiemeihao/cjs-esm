@@ -1,7 +1,7 @@
 import {
   Analyzed,
   RequireStatement,
-  TopLevelType,
+  TopScopeType,
 } from './analyze'
 import { AcornNode } from './types'
 
@@ -9,19 +9,18 @@ import { AcornNode } from './types'
  * At present, the `require` is divided into two cases
  * 目前，将 require 分为两种情况
  * 
- * 🎯-①: At top level scope and can be converted into an `import`
+ * At top level scope and can be converted into an `import` (🎯-①)
  * 在顶级作用域，并且可以转换成 import
  * 
- * 🚧-①: At non top level scope, the `require` will be promoted
+ * At non top level scope, the `require` will be promoted
  * 不在顶级作用域，require 将会被提升
  * 
- * 🚧-①: At non top level scope and in the function scope, tt will be converted into `import()`
+ * At non top level scope and in the function scope, tt will be converted into `import()` (🚧-①: 🐞)
  * 不在顶级作用域在函数作用域中，require 将会转换成 import()
  */
 
 export interface ImportRecord {
   node: AcornNode
-  topLevelNode: RequireStatement['topLevelNode']
   importee: string
   // e.g
   // const ast = require('acorn').parse()
@@ -33,6 +32,8 @@ export interface ImportRecord {
   // Auto generated name
   // e.g. __CJS_import__0__
   importName?: string
+  topScopeNode?: RequireStatement['topScopeNode']
+  functionScopeNode?: AcornNode
 
   // ==============================================
 
@@ -52,15 +53,15 @@ export function generateImport(analyzed: Analyzed) {
     const {
       node,
       ancestors,
-      topLevelNode,
-      // TODO: Nested scope
-      functionScope,
+      topScopeNode: topLevelNode,
+      functionScopeNode: functionScope,
     } = req
 
     const impt: ImportRecord = {
       node,
-      topLevelNode,
-      importee: ''
+      importee: '',
+      topScopeNode: topLevelNode,
+      functionScopeNode: functionScope,
     }
     const importName = `__CJS__promotion__import__${count++}__`
 
@@ -79,12 +80,12 @@ export function generateImport(analyzed: Analyzed) {
 
     if (topLevelNode) {
       switch (topLevelNode.type) {
-        case TopLevelType.ExpressionStatement:
+        case TopScopeType.ExpressionStatement:
           // TODO: With members
           impt.importee = `import '${requireId}'`
           break
 
-        case TopLevelType.VariableDeclaration:
+        case TopScopeType.VariableDeclaration:
           // TODO: Multiple declaration
           const VariableDeclarator = topLevelNode.declarations[0]
           const { /* Left */id, /* Right */init } = VariableDeclarator as AcornNode
@@ -139,9 +140,10 @@ export function generateImport(analyzed: Analyzed) {
           }
           break
       }
+    } else if (functionScope) {
+      // 🚧-①: 🐞 The `require()` will be convert to `import()`
     } else {
       // This is probably less accurate but is much cheaper than a full AST parse.
-      // 🚧-①: 🐞 The require of the function scope will be promoted
       impt.importee = `import * as ${importName} from '${requireId}'`
       impt.importName = importName
     }
