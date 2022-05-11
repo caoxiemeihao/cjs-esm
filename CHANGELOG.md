@@ -1,4 +1,9 @@
 ## 22-05-10
+v0.4.1
+
+90bfa48...5d59e92
+
+## 22-05-10
 v0.4.0
 
 - 🔨 refactor: more explicit statement rule verification | 25df9ff
