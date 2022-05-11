@@ -43,6 +43,7 @@ export default function cjs2esm(code: string): Result {
     } else if (functionScopeNode) {
       // 🚧-①: 🐞
       ms.overwrite(node.callee.start, node.callee.end, 'import/*🚧-🐞*/')
+      ms.appendRight(node.end, '.then(m => m.default || m)')
     } else {
       // TODO: Merge duplicated require id
       promotionImports.push(importee)
@@ -69,9 +70,10 @@ export default function cjs2esm(code: string): Result {
 
     const polyfill = ['/* export-runtime-S */', exportRuntime.polyfill, '/* export-runtime-E */'].join(' ')
     const _exports = [
-      '// --------- export-statement ---------',
+      '/* export-statement-S */',
       exportRuntime.exportDefault?.statement,
       exportRuntime.exportMembers,
+      '/* export-statement-E */',
     ].filter(Boolean).join('\n')
     ms.prepend(polyfill).append(_exports)
   }
