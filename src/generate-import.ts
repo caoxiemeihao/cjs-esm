@@ -53,15 +53,15 @@ export function generateImport(analyzed: Analyzed) {
     const {
       node,
       ancestors,
-      topScopeNode: topLevelNode,
-      functionScopeNode: functionScope,
+      topScopeNode,
+      functionScopeNode,
     } = req
 
     const impt: ImportRecord = {
       node,
       importee: '',
-      topScopeNode: topLevelNode,
-      functionScopeNode: functionScope,
+      topScopeNode,
+      functionScopeNode,
     }
     const importName = `__CJS__promotion__import__${count++}__`
 
@@ -74,12 +74,12 @@ export function generateImport(analyzed: Analyzed) {
       requireId = requireIdNode.value
     }
 
-    if (!requireId && !functionScope) {
+    if (!requireId && !functionScopeNode) {
       throw new Error(`Not supported statement: ${analyzed.code.slice(node.start, node.end)}`)
     }
 
-    if (topLevelNode) {
-      switch (topLevelNode.type) {
+    if (topScopeNode) {
+      switch (topScopeNode.type) {
         case TopScopeType.ExpressionStatement:
           // TODO: With members
           impt.importee = `import '${requireId}'`
@@ -87,7 +87,7 @@ export function generateImport(analyzed: Analyzed) {
 
         case TopScopeType.VariableDeclaration:
           // TODO: Multiple declaration
-          const VariableDeclarator = topLevelNode.declarations[0]
+          const VariableDeclarator = topScopeNode.declarations[0]
           const { /* Left */id, /* Right */init } = VariableDeclarator as AcornNode
 
           let LV: string | { key: string, value: string }[]
@@ -140,7 +140,7 @@ export function generateImport(analyzed: Analyzed) {
           }
           break
       }
-    } else if (functionScope) {
+    } else if (functionScopeNode) {
       // 🚧-①: 🐞 The `require()` will be convert to `import()`
     } else {
       // This is probably less accurate but is much cheaper than a full AST parse.
