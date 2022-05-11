@@ -17,7 +17,7 @@ export interface RequireStatement {
   node: AcornNode
   ancestors: AcornNode[]
   // 🎯-①: If require statement located top-level scope and it is convertible, this will have a value
-  // 如果 require 在顶级作用于，并且是可转换 import 的，那么 topLevelNode 将会被赋值
+  // 如果 require 在顶级作用于，并且是可转换 import 的，那么 topScopeNode 将会被赋值
   topScopeNode?: AcornNode & { type: TopScopeType }
   functionScopeNode?: AcornNode
 }
@@ -33,8 +33,8 @@ export interface ExportsStatement {
 }
 
 export interface Analyzed {
-  code: string,
-  ast: AcornNode,
+  code: string
+  ast: AcornNode
   require: RequireStatement[]
   exports: ExportsStatement[]
 }
