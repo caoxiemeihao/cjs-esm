@@ -75,7 +75,10 @@ export function generateImport(analyzed: Analyzed) {
     }
 
     if (!requireId && !functionScopeNode) {
-      throw new Error(`Not supported statement: ${analyzed.code.slice(node.start, node.end)}`)
+      const codeSnippets = analyzed.code.slice(node.start, node.end)
+      throw new Error(`The following require statement cannot be converted.
+    -> ${codeSnippets}
+       ${'^'.repeat(codeSnippets.length)}`)
     }
 
     if (topScopeNode) {
