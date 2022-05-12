@@ -9,8 +9,6 @@ v0.4.2
 - e2758d8 chore: improve throw Error message
 - 59523d3 feat: support non top-scope module.exports
 
-c683d9b...59523d3
-
 ## 22-05-10
 v0.4.1
 
