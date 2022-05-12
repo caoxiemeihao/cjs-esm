@@ -96,6 +96,7 @@ function findTopLevelScope(ancestors: AcornNode[]): AcornNode {
     return arr.find(e => e.type === TopScopeType.ExpressionStatement)
   }
 
+  // 🚧-②: At present, "ancestors" contains only one depth of "MemberExpression"
   if (/Program,VariableDeclaration,VariableDeclarator,(MemberExpression,)?CallExpression$/.test(ances)) {
     // const foo = require('foo')
     // const bar = require('foo').bar
