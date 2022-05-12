@@ -75,9 +75,10 @@ export default function cjs2esm(code: string): Result {
 
     const polyfill = ['/* export-runtime-S */', moduleRuntime, '/* export-runtime-E */'].join(' ')
     const _exports = [
-      '\n// --------- export-statement ---------',
+      '/* export-statement-S */',
       exportRuntime.exportDefault?.statement,
       exportRuntime.exportMembers,
+      '/* export-statement-E */',
     ].filter(Boolean).join('\n')
     ms.prepend(polyfill).append(_exports)
   }
