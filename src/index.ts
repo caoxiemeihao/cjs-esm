@@ -63,17 +63,21 @@ export default function cjs2esm(code: string): Result {
 
   // Replace exports statement
   if (exportRuntime) {
+    let moduleRuntime = 'const module = { exports: {} }; const exports = module.exports;'
+
     if (exportRuntime.exportDefault) {
-      const { start } = exportRuntime.exportDefault.node
-      ms.appendRight(start, `const ${exportRuntime.exportDefault.name} = `)
+      const { nodes, name } = exportRuntime.exportDefault
+      moduleRuntime += ` let ${name} = undefined;`
+      for (const node of nodes) {
+        ms.appendLeft(node.start, `${name} = `)
+      }
     }
 
-    const polyfill = ['/* export-runtime-S */', exportRuntime.polyfill, '/* export-runtime-E */'].join(' ')
+    const polyfill = ['/* export-runtime-S */', moduleRuntime, '/* export-runtime-E */'].join(' ')
     const _exports = [
-      '/* export-statement-S */',
+      '\n// --------- export-statement ---------',
       exportRuntime.exportDefault?.statement,
       exportRuntime.exportMembers,
-      '/* export-statement-E */',
     ].filter(Boolean).join('\n')
     ms.prepend(polyfill).append(_exports)
   }
