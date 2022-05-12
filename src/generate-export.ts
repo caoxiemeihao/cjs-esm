@@ -2,9 +2,8 @@ import { Analyzed } from './analyze'
 import { AcornNode } from './types'
 
 export interface ExportsRuntime {
-  polyfill: string
   exportDefault?: {
-    node: AcornNode
+    nodes: AcornNode[]
     name: string
     statement: string
   }
@@ -17,14 +16,13 @@ export function generateExport(analyzed: Analyzed): ExportsRuntime | null {
   }
 
   let exportDefault: ExportsRuntime['exportDefault']
-  const moduleExports = [...analyzed.exports]
-    // If there are multiple module.exports in one file, we need to get the last one
-    .reverse()
-    .find(exp => exp.token.left === 'module')?.node
-  if (moduleExports) {
+  const moduleExports = analyzed.exports
+    .filter(exp => exp.token.left === 'module')
+    .map(exp => exp.node)
+  if (moduleExports.length) {
     const name = '__CJS__export_default__'
     exportDefault = {
-      node: moduleExports,
+      nodes: moduleExports,
       name,
       statement: `export { ${name} as default }`
     }
@@ -43,18 +41,10 @@ ${membersDeclaration.join('\n')}
 export {
   ${members.map(m => `__CJS__export_${m}__ as ${m}`).join(',\n  ')}
 }
-`
+`.trim()
 
   return {
-    polyfill: `const module = { exports: {} }; const exports = module.exports;`,
     exportDefault,
     exportMembers,
   }
-}
-
-function removeDuplicationExports(exports: Analyzed['exports']) {
-  // If there are multiple module.exports in one file, we need to get the last one
-
-
-  // If there are multiple exports.foo in one file, we need to get the last one
 }
