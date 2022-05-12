@@ -1,3 +1,16 @@
+## 22-05-12
+v0.4.2
+
+- c683d9b (HEAD -> main, tag: cjs-esm@0.4.2) cjs-esm@0.4.2
+- 174f0e5 test: v0.4.2
+- aeb786c refactor: better code
+- d6bfcf5 chore: comment
+- a0fa6bf chore: 🚧-②
+- e2758d8 chore: improve throw Error message
+- 59523d3 feat: support non top-scope module.exports
+
+c683d9b...59523d3
+
 ## 22-05-10
 v0.4.1
 
