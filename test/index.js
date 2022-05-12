@@ -2,7 +2,7 @@ const fs = require('fs');
 const path = require('path');
 const cjs2esm = require('../').default;
 
-const filepath = path.join(__dirname, 'fixtures/v0.4.1');
+const filepath = path.join(__dirname, 'fixtures/v0.4.2');
 const code = fs.readFileSync(path.join(filepath, 'input.js'), 'utf8');
 const result = cjs2esm(code);
 
