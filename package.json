@@ -1,6 +1,6 @@
 {
   "name": "cjs-esm",
-  "version": "0.4.2",
+  "version": "0.4.3",
   "description": "Another CommonJs transform ESModule lib.",
   "main": "dist/index.js",
   "repository": {

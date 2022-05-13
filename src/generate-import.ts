@@ -7,16 +7,19 @@ import { AcornNode } from './types'
 
 /**
  * At present, the `require` is divided into two cases
- * 目前，将 require 分为两种情况
+ * 目前，将 require 分为三种情况
  * 
+ * ①:
  * At top level scope and can be converted into an `import` (🎯-①)
  * 在顶级作用域，并且可以转换成 import
  * 
- * At non top level scope, the `require` will be promoted
- * 不在顶级作用域，require 将会被提升
+ * ②:
+ * At top level scope, but cannot be converted directly, the `require` will be promoted
+ * 在顶级作用域，但不能直接转换，require 将会被提升
  * 
- * At non top level scope and in the function scope, tt will be converted into `import()` (🚧-①: 🐞)
- * 不在顶级作用域在函数作用域中，require 将会转换成 import()
+ * ③:
+ * In a block level scope or function scope, tt will be converted into `import()` (🚧-①: 🐞)
+ * 在块级作用域或函数作用域中，require 将会转换成 import()
  */
 
 export interface ImportRecord {
@@ -32,7 +35,9 @@ export interface ImportRecord {
   // Auto generated name
   // e.g. __CJS_import__0__
   importName?: string
+  // 🎯-①
   topScopeNode?: RequireStatement['topScopeNode']
+  // 🚧-①
   functionScopeNode?: AcornNode
 
   // ==============================================
