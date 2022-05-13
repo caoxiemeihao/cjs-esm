@@ -1,13 +1,8 @@
 import { Analyzed } from './analyze'
-import { AcornNode } from './types'
 
 export interface ExportsRuntime {
-  exportDefault?: {
-    nodes: AcornNode[]
-    name: string
-    statement: string
-  }
-  exportMembers?: string
+  polyfill: string
+  exportDeclaration: string
 }
 
 export function generateExport(analyzed: Analyzed): ExportsRuntime | null {
@@ -15,36 +10,32 @@ export function generateExport(analyzed: Analyzed): ExportsRuntime | null {
     return null
   }
 
-  let exportDefault: ExportsRuntime['exportDefault']
-  const moduleExports = analyzed.exports
-    .filter(exp => exp.token.left === 'module')
-    .map(exp => exp.node)
-  if (moduleExports.length) {
-    const name = '__CJS__export_default__'
-    exportDefault = {
-      nodes: moduleExports,
-      name,
-      statement: `export { ${name} as default }`
-    }
-  }
-
+  const memberDefault = analyzed.exports
+    // Find `module.exports` or `exports.default`
+    .find(exp => exp.token.left === 'module' || exp.token.right === 'default')
   let members = analyzed.exports
+    // Exclude `module.exports` and `exports.default`
+    .filter(exp => exp.token.left !== 'module' && exp.token.right !== 'default')
     .map(exp => exp.token.right)
-    .filter(member => member !== 'exports')
-    .filter(member => member !== 'default')
   // Remove duplicate export
   members = [...new Set(members)]
-  const membersDeclaration = members
-    .map(m => `const __CJS__export_${m}__ = (module.exports == null ? {} : module.exports).${m};`)
-  const exportMembers = `
-${membersDeclaration.join('\n')}
-export {
-  ${members.map(m => `__CJS__export_${m}__ as ${m}`).join(',\n  ')}
-}
-`.trim()
+
+  const membersDeclaration = members.map(
+    m => `const __CJS__export_${m}__ = (module.exports == null ? {} : module.exports).${m}`,
+  )
+  const membersExport = members.map(m => `__CJS__export_${m}__ as ${m}`)
+  if (memberDefault) {
+    membersDeclaration.unshift(`const __CJS__export_default__ = (module.exports == null ? {} : module.exports).default || module.exports`)
+    membersExport.unshift('__CJS__export_default__ as default')
+  }
 
   return {
-    exportDefault,
-    exportMembers,
+    polyfill: 'const module = { exports: {} }; const exports = module.exports;',
+    exportDeclaration: `
+${membersDeclaration.join(';\n')};
+export {
+  ${membersExport.join(',\n  ')},
+}
+`.trim(),
   }
 }
