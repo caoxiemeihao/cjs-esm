@@ -27,7 +27,7 @@ function load(path) {
 }
 ↓
 function load(path) {
-  import/*🚧-🐞*/(path);
+  import/*🚧-🐞*/(path).then(m => m.default || m);
 }
 ```
 
