@@ -46,6 +46,7 @@ export default function cjs2esm(code: string): Result {
       ms.appendRight(node.end, '.then(m => m.default || m)')
     } else {
       // TODO: Merge duplicated require id
+      // 🚧-①
       promotionImports.push(importee)
       importStatement = importName
     }

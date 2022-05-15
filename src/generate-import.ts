@@ -6,19 +6,19 @@ import {
 import { AcornNode } from './types'
 
 /**
- * At present, the `require` is divided into two cases
+ * At present, the `require` is divided into three cases
  * 目前，将 require 分为三种情况
  * 
  * ①:
- * At top level scope and can be converted into an `import` (🎯-①)
+ * In the top-level scope and can be converted to `import` (🎯-①)
  * 在顶级作用域，并且可以转换成 import
  * 
  * ②:
- * At top level scope, but cannot be converted directly, the `require` will be promoted
- * 在顶级作用域，但不能直接转换，require 将会被提升
+ * In the top-level scope, but it cannot be directly converted to `import`, the `require` will be promoted
+ * 在顶层作用域，但不能直接转换成 import，require 将会被提升
  * 
  * ③:
- * In a block level scope or function scope, tt will be converted into `import()` (🚧-①: 🐞)
+ * In a block level scope or function scope, it will be converted into `import()` (🚧-①: 🐞)
  * 在块级作用域或函数作用域中，require 将会转换成 import()
  */
 
