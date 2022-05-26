@@ -14,7 +14,8 @@ import cjs2esm from 'cjs-esm'
 // or
 // const cjs2esm = require('cjs-esm').default
 
-const { code, map } = cjs2esm(`const fs = require('fs')`)
+const { code, map } = cjs2esm(`const foo = require('foo')`)
+// output -> import * as foo from 'foo'
 ```
 
 ## TODO
