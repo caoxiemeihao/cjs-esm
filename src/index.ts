@@ -18,7 +18,7 @@ export default function cjs2esm(code: string): Result {
   const imports = generateImport(analyzed)
   const exportRuntime = generateExport(analyzed)
 
-  const promotionImports = []
+  const hoistImports = []
   const ms = new MagicString(code)
 
   // Replace require statement
@@ -47,7 +47,7 @@ export default function cjs2esm(code: string): Result {
     } else {
       // TODO: Merge duplicated require id
       // 🚧-①
-      promotionImports.push(importee)
+      hoistImports.push(importee)
       importStatement = importName
     }
 
@@ -58,8 +58,8 @@ export default function cjs2esm(code: string): Result {
     }
   }
 
-  if (promotionImports.length) {
-    ms.prepend(['/* import-promotion-S */', ...promotionImports, '/* import-promotion-E */'].join(' '))
+  if (hoistImports.length) {
+    ms.prepend(['/* import-hoist-S */', ...hoistImports, '/* import-hoist-E */'].join(' '))
   }
 
   // Replace exports statement
